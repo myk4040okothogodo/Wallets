@@ -1,0 +1,45 @@
+version: "3"
+services: 
+  web:
+    build: .
+    command: bash -c "python manage.py runserver 0.0.0.0:8080"
+    container_name: moneytransferAPI
+    restart: always
+    volumes:
+      - .:/moneytransferAPI
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - moneytransferAPI_net
+
+  postgres:
+    container_name: moneytransferAPI_DB
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: 'moneytransferAPI_user'
+      POSTGRES_PASSWORD: 'moneytransferAPI_password'
+      PGDATE: /data/moneytransferAPI_postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moneytransferAPI_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres:/data/moneytransferAPI_postgres
+    ports:
+      - '5432:5432'
+    networks:
+      - moneytransferAPI_net
+
+
+networks:
+  moneytransferAPI_net:
+    driver: bridge
+
+volumes:
+  postgres:
